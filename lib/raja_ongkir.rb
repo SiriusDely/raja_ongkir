@@ -32,16 +32,15 @@ module RajaOngkir
     end
 
     def provinces(q = nil, options = {})
-      if (options.length > 0 and not q.nil? and not q.is_a?(String)) or
-          (options.length <= 0 and not q.nil? and not q.is_a?(Hash))
-        raise "Provided q must be an String"
-      end
-      if q.is_a?(Hash)
+      if options.length <= 0 and q and q.is_a?(Hash)
         options = options.merge(q)
         q = nil
+      elsif options.length <= 0 and q and not q.is_a?(String)
+        raise "Provided q must be a String"
+      elsif options.length > 0 and q and not q.is_a?(String)
+        raise "Provided q must be a String"
       end
-      reload = options[:reload]
-      if reload or not @provinces
+      if @provinces.nil? or options[:reload]
         p "reload"
         # query = id ? build_query(id: id) : build_query
         response = self.class.get("/#{@account_type}/province", build_query)
@@ -67,8 +66,39 @@ module RajaOngkir
       @provinces.find{ |p| p["province_id"] == id.to_s }
     end
 
-    def cities
-      response = self.class.get("/#{@account_type}/city", headers: {"key" => @api_key})
+    def cities(q = nil, options = {})
+      if options.length <= 0 and q and q.is_a?(Hash)
+        options = options.merge(q)
+        q = nil
+      elsif options.length <= 0 and q and not q.is_a?(String)
+        raise "Provided q must be a String"
+      elsif options.length > 0 and not q.nil? and not q.is_a?(String)
+        raise "Provided q must be a String"
+      end
+      reload = options[:reload]
+      if @cities.nil? or reload
+        p "reload"
+        response = self.class.get("/#{@account_type}/city", build_query)
+        status = response["rajaongkir"]["status"]
+        unless status["code"] >= 200 and status["code"] < 300
+          raise "#{status["description"]} CODE #{status["code"]}"
+        else
+          @cities = response["rajaongkir"]["results"]
+        end
+      end
+      unless q and q.is_a?(String)
+        @cities
+      else
+        @cities.select{ |c| c["city_name"].downcase =~ /#{Regexp.quote(q.downcase)}/ }
+      end
+    end
+
+    def city(id, options = {})
+      unless id.is_a?(Integer)
+        raise "Provided id must be an Integer."
+      end
+      @cities = cities(options)
+      @cities.find{ |c| c["city_id"] == id.to_s }
     end
 
     private
