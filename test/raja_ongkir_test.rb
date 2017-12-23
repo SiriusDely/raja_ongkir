@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RajaOngkirTest < Minitest::Test
   def setup
-    @raja_ongkir = RajaOngkir::Client.new "282c5626de5a38ba65a5de5b4e27509a"
+    @raja_ongkir = RajaOngkir::Client.new ENV["API_KEY"]
   end
 
   def test_that_it_has_a_version_number
