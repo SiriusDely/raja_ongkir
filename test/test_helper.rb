@@ -3,6 +3,6 @@ require 'raja_ongkir'
 
 require 'minitest/autorun'
 
-require "coveralls"
+require 'coveralls'
 
 Coveralls.wear!
