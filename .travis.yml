@@ -2,3 +2,11 @@ language: ruby
 notifications:
   email:
     - siriusmdely@gmail.com
+deploy:
+  provider: rubygems
+  api_key:
+    secure: kuvEbqWeuDC4J6QGvvzkxc0HhpZNCFB8KN9ybd3SRblz2zgIIdIM9vhMwsk1cqDQnD2kAT1OKEM/bLOrcOGl7OV4IHExhL7ZgQeIzzDhanOaMjkIufRB2IC2Onjdnxvz90P+ZXae6nOUJkdvf31aR8q186iRTfJvP+iYgWQ63jH4mgOySwl1ZE1c56Wt0YTpaeUY1k/QuweYzVML8yg+bA4xyzqWS/grXfJL2bMQ1qHgVEDG3G1zPQF/hpf4CdxjUrsLPa+0UzazBlKhjkTp5arCgaLopK6fR3vGt8lFEq0aBywKqR+qSIIE8ejtWsnHV94kCyWaqKaYRpS6en088jTP0DZUXB5qLCfg9l5dMtuOGKem5YdYFxvoHUB6X5NBizhW4pyf/R66EYsRjmLFlyCUduElTi8nEoK/AbxQMkhF5XmNJMIKCFgwuf/sjDFCFvowKMAR0X4x5YbbGC6vGVZGmK9D8/xymo8rPwl2p8nSrSo7pKdsg57q/T+TobGhxu3rewCo7y61LFSEeXZ9NDSisiKFyUSATfxKVI+JMFLLFEHga/L1BWb1I2YQEq1Lo1mDwV3qDIOOG5XMqBo3hU22doT+kUR7DXQ/lgFUz6gutFbnusqrkUNuTQj6fzCzaogyJ8EsDkMVLGjPoJ6XvJWnnlhHn7AMshp+B8eHxRo=
+  gem: raja_ongkir
+  on:
+    tags: true
+    repo: siriusdely/raja_ongkir
