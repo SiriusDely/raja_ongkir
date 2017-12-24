@@ -67,6 +67,19 @@ module RajaOngkir
       @cities.find { |c| c['city_id'] == id.to_s }
     end
 
+    def costs(origin_id, destination_id, grams, courier = 'jne')
+      response = self.class.post(
+        "/#{@account_type}/cost",
+        headers: {
+          'key' => @api_key,
+          'content-type' => 'application/x-www-form-urlencoded'
+        },
+        body: "origin=#{origin_id}&destination=#{destination_id}&" \
+          "weight=#{grams}&courier=#{courier}"
+      )
+      @costs = items_from_resp response
+    end
+
     private
 
     # rubocop:disable Metrics/AbcSize
@@ -96,10 +109,10 @@ module RajaOngkir
 
     def filter_by_keyword(items, q)
       item = items.first
-      if item['province']
-        key = 'province'
-      elsif item['city_name']
+      if item['city_name']
         key = 'city_name'
+      elsif item['province']
+        key = 'province'
       end
       items.select do |p|
         p[key].downcase =~ /#{Regexp.quote(q.downcase)}/
