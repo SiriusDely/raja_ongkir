@@ -7,12 +7,14 @@ require 'uri'
 module RajaOngkir
   BASE_URL = 'https://api.rajaongkir.com'.freeze
 
+  ## Client for rajaongkir.com
+  #
   class Client
     include HTTParty
 
     base_uri BASE_URL
 
-    def initialize(account_type = 'starter', api_key)
+    def initialize(api_key, account_type = 'starter')
       @account_type = account_type
       @api_key = api_key
     end
@@ -32,30 +34,14 @@ module RajaOngkir
     end
 
     def provinces(q = nil, options = {})
-      if options.length <= 0 && q && q.is_a?(Hash)
-        options = options.merge(q)
-        q = nil
-      elsif options.length <= 0 && q && !q.is_a?(String)
-        raise 'Provided q must be a String'
-      elsif !options.empty? && q && !q.is_a?(String)
-        raise 'Provided q must be a String'
-      end
+      q, options = sanitize_params q, options
       if @provinces.nil? || options[:reload]
-        p 'reload'
         # query = id ? build_query(id: id) : build_query
         response = self.class.get("/#{@account_type}/province", build_query)
-        status = response['rajaongkir']['status']
-        if status['code'] >= 200 && status['code'] < 300
-          @provinces = response['rajaongkir']['results']
-        else
-          raise "#{status['description']} CODE #{status['code']}"
-        end
+        @provinces = items_from_resp response
       end
-      if q && q.is_a?(String)
-        @provinces.select { |p| p['province'].downcase =~ /#{Regexp.quote(q.downcase)}/ }
-      else
-        @provinces
-      end
+      return filter_by_keyword @provinces, q if q && q.is_a?(String)
+      @provinces
     end
 
     def province(id, options = {})
@@ -65,30 +51,14 @@ module RajaOngkir
     end
 
     def cities(q = nil, options = {})
-      if options.length <= 0 && q && q.is_a?(Hash)
-        options = options.merge(q)
-        q = nil
-      elsif options.length <= 0 && q && !q.is_a?(String)
-        raise 'Provided q must be a String'
-      elsif !options.empty? && !q.nil? && !q.is_a?(String)
-        raise 'Provided q must be a String'
-      end
+      q, options = sanitize_params q, options
       reload = options[:reload]
       if @cities.nil? || reload
-        p 'reload'
         response = self.class.get("/#{@account_type}/city", build_query)
-        status = response['rajaongkir']['status']
-        if status['code'] >= 200 && status['code'] < 300
-          @cities = response['rajaongkir']['results']
-        else
-          raise "#{status['description']} CODE #{status['code']}"
-        end
+        @cities = items_from_resp response
       end
-      if q && q.is_a?(String)
-        @cities.select { |c| c['city_name'].downcase =~ /#{Regexp.quote(q.downcase)}/ }
-      else
-        @cities
-      end
+      return filter_by_keyword @cities, q if q && q.is_a?(String)
+      @cities
     end
 
     def city(id, options = {})
@@ -99,9 +69,41 @@ module RajaOngkir
 
     private
 
+    # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    def sanitize_params(q, options)
+      return [nil, options.merge(q)] if
+        options.length <= 0 && q && q.is_a?(Hash)
+      raise 'Provided q must be a String' if
+        (options.length <= 0 && q && !q.is_a?(String)) ||
+        (!options.empty? && !q.nil? && !q.is_a?(String))
+
+      [q, options]
+    end
+    # rubocop:enable all
+
     def build_query(query = {})
       query ||= {}
       { query: query, headers: { 'key' => @api_key } }
+    end
+
+    def items_from_resp(response)
+      status = response['rajaongkir']['status']
+      items = response['rajaongkir']['results']
+      return items if status['code'] >= 200 && status['code'] < 300
+      raise "#{status['description']} CODE #{status['code']}"
+    end
+
+    def filter_by_keyword(items, q)
+      item = items.first
+      if item['province']
+        key = 'province'
+      elsif item['city_name']
+        key = 'city_name'
+      end
+      items.select do |p|
+        p[key].downcase =~ /#{Regexp.quote(q.downcase)}/
+      end
     end
   end
 end

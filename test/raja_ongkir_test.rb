@@ -27,7 +27,9 @@ class RajaOngkirTest < Minitest::Test
     q = 'Barat'
     west_provinces = @raja_ongkir.provinces q
     assert !west_provinces.empty?
-    west_provinces.each { |w| assert w['province'].downcase.include?(q.downcase) }
+    west_provinces.each do |w|
+      assert w['province'].downcase.include?(q.downcase)
+    end
   end
 
   def test_that_provinces_rejects_keyword_except_string
