@@ -1,6 +1,7 @@
 require 'httparty'
 require 'net/http'
 require 'openssl'
+require 'raja_ongkir/helper'
 require 'raja_ongkir/version'
 require 'uri'
 
@@ -16,7 +17,7 @@ module RajaOngkir
 
     def initialize(api_key, account_type = 'starter')
       @account_type = account_type
-      @api_key = api_key
+      Helper.api_key = api_key
     end
 
     def hi
@@ -34,13 +35,14 @@ module RajaOngkir
     end
 
     def provinces(q = nil, options = {})
-      q, options = sanitize_params q, options
+      q, options = Helper.sanitize_params q, options
       if @provinces.nil? || options[:reload]
         # query = id ? build_query(id: id) : build_query
-        response = self.class.get("/#{@account_type}/province", build_query)
-        @provinces = items_from_resp response
+        response = self.class.get("/#{@account_type}/province",
+                                  Helper.build_query)
+        @provinces = Helper.items_from_resp response
       end
-      return filter_by_keyword @provinces, q if q && q.is_a?(String)
+      return Helper.filter_by_keyword @provinces, q if q && q.is_a?(String)
       @provinces
     end
 
@@ -51,13 +53,13 @@ module RajaOngkir
     end
 
     def cities(q = nil, options = {})
-      q, options = sanitize_params q, options
+      q, options = Helper.sanitize_params q, options
       reload = options[:reload]
       if @cities.nil? || reload
-        response = self.class.get("/#{@account_type}/city", build_query)
-        @cities = items_from_resp response
+        response = self.class.get("/#{@account_type}/city", Helper.build_query)
+        @cities = Helper.items_from_resp response
       end
-      return filter_by_keyword @cities, q if q && q.is_a?(String)
+      return Helper.filter_by_keyword @cities, q if q && q.is_a?(String)
       @cities
     end
 
@@ -68,55 +70,13 @@ module RajaOngkir
     end
 
     def costs(origin_id, destination_id, grams, courier = 'jne')
+      origin_id, destination_id, grams, courier =
+        Helper.sanitize_costs_params origin_id, destination_id, grams, courier
       response = self.class.post(
         "/#{@account_type}/cost",
-        headers: {
-          'key' => @api_key,
-          'content-type' => 'application/x-www-form-urlencoded'
-        },
-        body: "origin=#{origin_id}&destination=#{destination_id}&" \
-          "weight=#{grams}&courier=#{courier}"
+        Helper.build_costs_query(origin_id, destination_id, grams, courier)
       )
-      @costs = items_from_resp response
-    end
-
-    private
-
-    # rubocop:disable Metrics/AbcSize
-    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-    def sanitize_params(q, options)
-      return [nil, options.merge(q)] if
-        options.length <= 0 && q && q.is_a?(Hash)
-      raise 'Provided q must be a String' if
-        (options.length <= 0 && q && !q.is_a?(String)) ||
-        (!options.empty? && !q.nil? && !q.is_a?(String))
-
-      [q, options]
-    end
-    # rubocop:enable all
-
-    def build_query(query = {})
-      query ||= {}
-      { query: query, headers: { 'key' => @api_key } }
-    end
-
-    def items_from_resp(response)
-      status = response['rajaongkir']['status']
-      items = response['rajaongkir']['results']
-      return items if status['code'] >= 200 && status['code'] < 300
-      raise "#{status['description']} CODE #{status['code']}"
-    end
-
-    def filter_by_keyword(items, q)
-      item = items.first
-      if item['city_name']
-        key = 'city_name'
-      elsif item['province']
-        key = 'province'
-      end
-      items.select do |p|
-        p[key].downcase =~ /#{Regexp.quote(q.downcase)}/
-      end
+      @costs = Helper.items_from_resp response
     end
   end
 end
