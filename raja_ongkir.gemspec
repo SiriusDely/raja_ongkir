@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Client for rajaongkir.com'
   spec.description   = 'Client for rajaongkir.com'
-  spec.homepage      = 'https://github.com/siriusdely/raja-ongkir'
+  spec.homepage      = 'https://github.com/siriusdely/raja_ongkir'
   spec.license       = 'MIT'
 
   spec.check_allowed_push_host
